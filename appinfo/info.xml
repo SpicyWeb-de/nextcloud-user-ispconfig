@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<info>
+	<id>user_ispconfig</id>
+	<name>User support for ISPConfig mail accounts</name>
+	<description>Use credentials from ISPConfig managed mail accounts for login</description>
+	<licence>AGPL</licence>
+	<author>Michael Fürmann</author>
+	<documentation>
+  	<admin>https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/wikis/home</admin>
+  </documentation>
+	<website>https://spicyhub.de/spicy-web/nextcloud-user-ispconfig</website>
+	<bugs>https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues</bugs>
+	<repository type="git">https://spicyhub.de/spicy-web/nextcloud-user-ispconfig.git</repository>
+	<dependencies>
+		<nextcloud min-version="13" max-version="14" />
+	</dependencies>
+	<version>0.1</version>
+	<types>
+		<authentication/>
+		<prelogin/>
+	</types>
+</info>
