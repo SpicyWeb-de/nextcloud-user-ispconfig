@@ -165,8 +165,6 @@ __It affects how the nextcloud internal user id is built. So DONT change in prod
 
 ### bare-name
 
-__* NOT YET IMPLEMENTED *__
-
 Users from domain-one.net are allowed to login with their mailbox name.  
 Instead of *big.boss@domain-one.net* your boss uses just *big.boss* as login name.
 
@@ -178,16 +176,12 @@ domain could hijack the cloud account.*
 
 ### uid-prefix
 
-__* NOT YET IMPLEMENTED *__
-
 Users from a domain with this option set authenticate with their mailbox name prefixed by this string.  
 Instead of *user@some-ugly-customer-domain.net* the user signes on with *`prefix-`user*.
 
 __Resulting in federated cloud ID *`prefix-`user@your-cloud.fqdn*__
 
 ### uid-suffix
-
-__* NOT YET IMPLEMENTED *__
 
 Users from domain doe.com authenticate with their mailbox name suffixed by *.doe*.  
 Instead of *john@doe.com* the user signes on with *john`.doe`*.

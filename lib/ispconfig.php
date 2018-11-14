@@ -26,6 +26,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
     private $allowedDomains = false;
     private $quota = false;
     private $groups = array();
+    private $uidMapping = array();
 
 	/**
 	 * Create new IMAP authentication provider
@@ -34,7 +35,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
 	 *                        {127.0.0.1:143/imap/readonly}
 	 * @param string $domain  If provided, loging will be restricted to this domain
 	 */
-    public function __construct($location, $uri, $user, $password, $options){
+    public function __construct($location, $uri, $user, $password, $options = array()){
         $this->soapLocation = $location;
         $this->soapUri = $uri;
         $this->remoteUser = $user;
@@ -46,6 +47,16 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
             $this->quota = $options['default_quota'];
         if(array_key_exists('default_groups', $options))
             $this->groups = $options['default_groups'];
+        if(is_array($options['domain_config'])) {
+            foreach($options['domain_config'] AS $domain => $opts) {
+                if (array_key_exists('bare-name', $opts) && $opts['bare-name'])
+                    $this->uidMapping[$domain] = '/(.*)/';
+                elseif (array_key_exists('uid-prefix', $opts))
+                    $this->uidMapping[$domain] = "/".$opts['uid-prefix']."(.*)/";
+                elseif (array_key_exists('uid-suffix', $opts))
+                    $this->uidMapping[$domain] = "/(.*)".$opts['uid-suffix']."/";
+            }
+        }
 	}
 
 	/**
@@ -58,77 +69,53 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
      * @throws \OC\DatabaseException
 	 */
 	public function checkPassword($uid, $password) {
-        list($uid, $mailbox, $domain) = $this->parseUID($uid);
+        // get logins to check against the soap api
+	    $logins = $this->parseUID($uid);
 
-		// Check, if domain is allowed
-        if($this->allowedDomains){
-            if(count($this->allowedDomains) && $domain && !in_array($domain, $this->allowedDomains))
-                return false;
-        }
-
-		// check for existing user with this mail address
-        $username = $this->checkExistingUser($uid, $mailbox, $domain);
-        // Connect to ISPConfig API client
+	    $authResult = false;
         $client = new SoapClient(null, array('location' => $this->soapLocation, 'uri' => $this->soapUri));
         try {
-            //* Login to the remote server
             if($session_id = $client->login($this->remoteUser,$this->remotePassword)) {
-                $mailbox = $client->mail_user_get($session_id, array('email' => $username));
-                if(count($mailbox)){
-                    $displayname = $mailbox[0]['name'];
-                    $cryptedPassword = $mailbox[0]['password'];
-                    $authResult = crypt($password, $cryptedPassword) === $cryptedPassword;
+                foreach($logins AS $login) {
+                    list($uid, $mailbox, $domain) = $login;
+                    if($domainUser = $this->tryDomainLogin($uid, $mailbox, $domain, $password, $client, $session_id)) {
+                        $authResult = $domainUser;
+                        break;
+                    }
                 }
-                else
-                    $authResult = false;
-                //* Logout
                 $client->logout($session_id);
             }
-            else
-                $authResult = false;
         } catch (SoapFault $e) {
             $authResult = false;
         }
 
         if ($authResult) {
-            $uid = mb_strtolower($username);
-            $this->storeUser($uid, $displayname, $this->getQuota($domain), $this->getGroups($domain));
-            return $uid;
+            $this->storeUser($authResult['uid'], $authResult["email"], $authResult['displayname'], $this->getQuota($authResult['domain']), $this->getGroups($authResult['domain']));
+            return $authResult['uid'];
         } else {
             return false;
         }
 	}
 
-    /**
-     * Check for a user already existing with this mail account and continue with his UID, if found
-     *
-     * @param string $uid username as entered by user
-     * @param string $mailbox users mailbox name
-     * @param string $domain users maildomain name
-     *
-     * @return string original username or the one found in DB
-     * @throws \OC\DatabaseException
-     */
-	private function checkExistingUser($uid, $mailbox, $domain) {
-        $result = OC_DB::executeAudited(
-            'SELECT `userid` FROM `*PREFIX*preferences` WHERE `appid`=? AND `configkey`=? AND `configvalue`=?',
-            array('settings','email',"$mailbox@$domain")
-        );
-
-        $users = array();
-        while ($row = $result->fetchRow()) {
-            $users[] = $row['userid'];
+	private function tryDomainLogin($uid, $mailbox, $domain, $password, $soapClient, $soapSession){
+        // Check, if domain is allowed
+        if($this->allowedDomains){
+            if(count($this->allowedDomains) && $domain && !in_array($domain, $this->allowedDomains)){
+                return false;
+            }
         }
 
-        if(count($users) === 1) {
-            $username = $users[0];
-        }else{
-            $username = $uid;
+        $mailuser = $soapClient->mail_user_get($soapSession, array('email' => "$mailbox@$domain"));
+        if(count($mailuser)){
+            $displayname = $mailuser[0]['name'];
+            $cryptedPassword = $mailuser[0]['password'];
+            if(crypt($password, $cryptedPassword) === $cryptedPassword)
+                return array("uid" => $uid, "domain" => $domain, "email" => "$mailbox@$domain", "displayname" => $displayname);
         }
-        return $username;
+        return false;
     }
 
-    /**
+       /**
      * Get UID, mailbox name and maildomain name from users entered UID
      *
      * @param string $uid
@@ -137,6 +124,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
 	private function parseUID($uid) {
         // Make uid lower case
         $uid = strtolower($uid);
+        $result = array();
 
         // Replace escaped @ symbol in uid (which is a mail address)
         // but only if there is no @ symbol and if there is a %40 inside the uid
@@ -145,7 +133,26 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
         }
         list($mailbox, $domain) = preg_split('/@/', $uid);
 
-        return array($uid, $mailbox, $domain);
+
+        if($domain){
+            if(array_key_exists($domain, $this->uidMapping)){
+                // re-map uid if options set for this domain
+                $uid = preg_replace("/\*/", $uid, $this->uidMapping[$domain]);
+                $result[] = array($uid, $mailbox, $domain);
+            } else {
+                // just take "as is" if not
+                $result[] = array($uid, $mailbox, $domain);
+            }
+        } else {
+            // UID is no mail address
+            // check for prefix, suffix or bare-name domains valid for this input
+            foreach($this->uidMapping AS $domain => $pattern) {
+               if ($mappedMailbox = preg_filter($pattern, '$1', $uid))
+                    $result[] = array($uid, $mappedMailbox, $domain);
+            }
+        }
+
+        return $result;
     }
 
     /**

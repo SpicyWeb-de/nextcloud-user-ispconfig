@@ -148,7 +148,7 @@ abstract class Base extends \OC\User\Backend{
 	 * @return void
      * @throws \OC\DatabaseException
 	 */
-	protected function storeUser($uid, $displayname, $quota = false, $groups = false)
+	protected function storeUser($uid, $email, $displayname, $quota = false, $groups = false)
 	{
 		if (!$this->userExists($uid)) {
 			OC_DB::executeAudited(
@@ -157,7 +157,7 @@ abstract class Base extends \OC\User\Backend{
 				array($uid, $displayname)
 			);
 
-            $this->setInitialUserProfile($uid, $uid, $displayname);
+            $this->setInitialUserProfile($uid, $email, $displayname);
 			if ($quota)
 			    $this->setUserQuota($uid, $quota);
 			if($groups)
