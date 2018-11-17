@@ -214,6 +214,18 @@ abstract class Base extends \OC\User\Backend{
 
     /**
      * @param string $uid the username
+     * @param string $email users mail address
+     * @throws \OC\DatabaseException
+     */
+	private function setUserEmail($uid, $email) {
+        OC_DB::executeAudited('INSERT INTO `*PREFIX*preferences` (`userid`, `appid`, `configkey`, `configvalue`)'
+            . ' VALUES (?, ?, ?, ?)',
+            array($uid, 'settings', 'email', $email)
+        );
+    }
+
+    /**
+     * @param string $uid the username
      * @param string $quota amount of quota
      * @throws \OC\DatabaseException
      */
@@ -247,6 +259,7 @@ abstract class Base extends \OC\User\Backend{
      * @throws \OC\DatabaseException
      */
     private function setInitialUserProfile($uid, $email, $displayname) {
+        $this->setUserEmail($uid, $email);
         OC_DB::executeAudited(
             'INSERT INTO `*PREFIX*accounts` ( `uid`, `data` )'
             . ' VALUES( ?, ? )',
