@@ -23,7 +23,6 @@ For users from specific domains you can add individual quota and group settings 
   	</documentation>
 	<bugs>https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues</bugs>
 	<website>https://spicyhub.de/spicy-web/nextcloud-user-ispconfig</website>
-	<bugs>https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues</bugs>
 	<repository type="git">https://spicyhub.de/spicy-web/nextcloud-user-ispconfig.git</repository>
 	<dependencies>
 		<nextcloud min-version="13" max-version="14" />
