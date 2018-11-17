@@ -5,7 +5,7 @@
 	<version>0.2.1</version>
 	<name>User support for ISPConfig mail accounts</name>
 	<summary>Allow users logging in using their mailbox credentials as managed via ISPConfig</summary>
-	<description><![CDATA[Using this authentication provider you allow your users to use login credentials from their mailboxes as managed by ISPConfig 3 hosting controlpanel.
+	<description lang="en"><![CDATA[Using this authentication provider you allow your users to use login credentials from their mailboxes as managed by ISPConfig 3 hosting controlpanel.
 
 To do so, you have to configure the URL of your panel server for API requests along with user credentials for a ISPConfig remote api user.
 See Readme in admin documentation for details.
@@ -15,6 +15,18 @@ Furthermore, you can set default quota and group memberships for all newly creat
 For users from specific domains you can add individual quota and group settings and also allow them to use simplified usernames, e.g. instead of john@doe.com just john or john.doe. For more information on this, take a look at prefix, suffix and bare-name configuration contained in the Readme file.
 
 Requires SOAP PHP Extension to be installed and enabled.
+]]></description>
+	<description lang="de"><![CDATA[Mit diesem Authentifizierungsprovider können sich Deine Nutzer mit ihren in ISPConfig 3 hinterlegten E-Mail Zugangsdaten auch in Nextcloud anmelden.
+
+Dazu müssen in der Konfigurationsdatei die URL des Panel Servers (für die API Anfragen) und Zugangsdaten für einen ISPConfig Remote User angegeben werden.
+Siehe die verlinkte Readme in der Admin-Dokumentation für Details.
+
+Dieser Auth-Provider erlaubt dir, sowohl Speicherplatz als auch Standerd-Gruppenzugehörigkeit für neue Benutzer vorzugeben.
+
+Es ist auch möglich, für Nutzer von bestimmten Domains abweichende Vorgaben für Speicherplatz und Gruppenzugehörigkeit zu hinterlegen und ein Mapping für vereinfachte Nutzernamen zu hinterlegen.
+Weitere Details dazu enthält der Konfigurations-Abschnitt der Admindokumentation.
+
+Benötigt SOAP PHP Extension installiert und aktiviert.
 ]]></description>
 	<licence>agpl</licence>
 	<author mail="michael@spicyweb.de" homepage="https://spicyweb.de">Michael Fürmann</author>
@@ -29,6 +41,7 @@ Requires SOAP PHP Extension to be installed and enabled.
 	<repository type="git">https://spicyhub.de/spicy-web/nextcloud-user-ispconfig.git</repository>
 	<dependencies>
 		<nextcloud min-version="13" max-version="14" />
+		<lib>soap</lib>
 	</dependencies>
 	<types>
 		<authentication/>
