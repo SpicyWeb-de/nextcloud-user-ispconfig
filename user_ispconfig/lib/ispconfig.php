@@ -79,6 +79,11 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
      * @throws \OC\DatabaseException
 	 */
 	public function checkPassword($uid, $password) {
+        if(!class_exists("SoapClient")){
+            OCP\Util::writeLog('user_ispconfig', 'ERROR: PHP soap extension is not installed or not enabled', OCP\Util::ERROR);
+            return false;
+        }
+
         // get logins to check against the soap api
 	    $logins = $this->parseUID($uid);
 	    $authResult = false;

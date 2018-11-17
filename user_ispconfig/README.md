@@ -188,6 +188,31 @@ Instead of *john@doe.com* the user signes on with *john`.doe`*.
 
 __Resulting in federated cloud ID *john`.doe`@your-cloud.fqdn*__
 
+## Troubleshooting
+
+### Always get 'Invalid Password'
+
+#### Check for php-soap
+
+Check your nextclouds log messages for `ERROR: PHP soap extension is not installed or not enabled`  
+If this message occours, ensure you have the PHP Soap extension installed and activated.
+
+You can check, if soap is activated by grepping your etc folder like this (adjust folder name to your environment):  
+```bash
+grep -r ^extension=soap /etc/php
+```
+
+If not activated, make sure you have the soap extension installed and activate it. 
+
+On debian-like systems for example install the package php-soap and activate it afterwards by entering  
+```bash
+apt-get install php-soap
+phpenmod soap
+service apache2 restart
+```
+
+
+
 ## Thanks to
 
 - Christian Weiske, UserExternal extension as template for lib/base.php
