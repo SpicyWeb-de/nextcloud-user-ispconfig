@@ -98,8 +98,25 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
                     }
                 }
                 $client->logout($session_id);
+            } else {
+                OCP\Util::writeLog('user_ispconfig', 'SOAP error: Could not establish SOAP session', OCP\Util::ERROR);
             }
         } catch (SoapFault $e) {
+            $errorMsg = $e->getMessage();
+            switch($errorMsg) {
+                case 'looks like we got no XML document':
+                    OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid location or uri of ISPConfig SOAP Endpoint', OCP\Util::ERROR);
+                    break;
+                case 'The login failed. Username or password wrong.':
+                    OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid credentials of ISPConfig remote user', OCP\Util::ERROR);
+                    break;
+                case 'You do not have the permissions to access this function.':
+                    OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: ISPConfig remote user not allowed to access E-Mail User Functions', OCP\Util::ERROR);
+                    break;
+                default:
+                    OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: ('.$e->getCode().')'.$e->getMessage(), OCP\Util::ERROR);
+                    break;
+            }
             $authResult = false;
         }
 
