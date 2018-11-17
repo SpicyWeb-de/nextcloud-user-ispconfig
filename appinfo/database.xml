@@ -29,12 +29,41 @@
     <length>64</length>
    </field>
 
+   <field>
+    <name>mailbox</name>
+    <type>text</type>
+    <default></default>
+    <notnull>false</notnull>
+    <length>64</length>
+   </field>
+
+   <field>
+    <name>domain</name>
+    <type>text</type>
+    <default></default>
+    <notnull>false</notnull>
+    <length>64</length>
+   </field>
+
    <index>
     <name>users_unique</name>
     <primary>true</primary>
     <unique>true</unique>
     <field>
      <name>uid</name>
+     <sorting>ascending</sorting>
+    </field>
+   </index>
+
+   <index>
+    <name>mailaddress_unique</name>
+    <unique>true</unique>
+    <field>
+     <name>mailbox</name>
+     <sorting>ascending</sorting>
+    </field>
+    <field>
+     <name>domain</name>
      <sorting>ascending</sorting>
     </field>
    </index>

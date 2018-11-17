@@ -30,10 +30,22 @@ abstract class Base extends \OC\User\Backend{
      * @throws \OC\DatabaseException
      */
 	public function deleteUser($uid) {
-		OC_DB::executeAudited(
-			'DELETE FROM `*PREFIX*users_ispconfig` WHERE `uid` = ?',
-			array($uid)
-		);
+        OC_DB::executeAudited(
+            'DELETE FROM `*PREFIX*accounts` WHERE `uid` = ?',
+            array($uid)
+        );
+        OC_DB::executeAudited(
+            'DELETE FROM `*PREFIX*preferences` WHERE `userid` = ?',
+            array($uid)
+        );
+        OC_DB::executeAudited(
+            'DELETE FROM `*PREFIX*group_user` WHERE `uid` = ?',
+            array($uid)
+        );
+        OC_DB::executeAudited(
+            'DELETE FROM `*PREFIX*users_ispconfig` WHERE `uid` = ?',
+            array($uid)
+        );
 		return true;
 	}
 
@@ -57,6 +69,22 @@ abstract class Base extends \OC\User\Backend{
 			return $uid;
 		}
 	}
+
+    /**
+     * Get data of returning user by uid or mailaddress
+     *
+     * @param string $loginName Login Name to check
+     * @return array uid, mailbox, domain
+     * @throws \OC\DatabaseException
+     */
+    public function getUserData($loginName) {
+        $user = OC_DB::executeAudited(
+            'SELECT `uid`, `mailbox`, `domain` FROM `*PREFIX*users_ispconfig`'
+            . ' WHERE `uid` = ? OR CONCAT(`mailbox`, "@", `domain`) = ?',
+            array($loginName, $loginName)
+        )->fetchRow();
+        return $user;
+    }
 
 	/**
 	 * Get a list of all display names and user ids.
@@ -148,16 +176,16 @@ abstract class Base extends \OC\User\Backend{
 	 * @return void
      * @throws \OC\DatabaseException
 	 */
-	protected function storeUser($uid, $email, $displayname, $quota = false, $groups = false)
+	protected function storeUser($uid, $mailbox, $domain, $displayname, $quota = false, $groups = false)
 	{
 		if (!$this->userExists($uid)) {
 			OC_DB::executeAudited(
-				'INSERT INTO `*PREFIX*users_ispconfig` ( `uid`, `displayname` )'
-				. ' VALUES( ?, ? )',
-				array($uid, $displayname)
+				'INSERT INTO `*PREFIX*users_ispconfig` ( `uid`, `displayname`, `mailbox`, `domain` )'
+				. ' VALUES( ?, ?, ?, ? )',
+				array($uid, $displayname, $mailbox, $domain)
 			);
 
-            $this->setInitialUserProfile($uid, $email, $displayname);
+            $this->setInitialUserProfile($uid, "$mailbox@$domain", $displayname);
 			if ($quota)
 			    $this->setUserQuota($uid, $quota);
 			if($groups)

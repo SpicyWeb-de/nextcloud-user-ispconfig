@@ -1,5 +1,4 @@
 <?php
-use OCP\IDBConnection;
 /**
  * Copyright (c) 2018 Michael Fürmann <michael@spicyweb.de>
  * This file is licensed under the Affero General Public License version 3 or
@@ -26,7 +25,14 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
     private $allowedDomains = false;
     private $quota = false;
     private $groups = array();
+    /**
+     * @var array Mappings to convert bare, prefixed and suffixed uids back to mail addresses
+     */
     private $uidMapping = array();
+    /**
+     * @var array Mappings to convert mail addresses to bare, prefixed or suffixed uids
+     */
+    private $mailMapping = array();
 
 	/**
 	 * Create new IMAP authentication provider
@@ -49,12 +55,16 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
             $this->groups = $options['default_groups'];
         if(is_array($options['domain_config'])) {
             foreach($options['domain_config'] AS $domain => $opts) {
-                if (array_key_exists('bare-name', $opts) && $opts['bare-name'])
+                if (array_key_exists('bare-name', $opts) && $opts['bare-name']) {
                     $this->uidMapping[$domain] = '/(.*)/';
-                elseif (array_key_exists('uid-prefix', $opts))
+                    $this->mailMapping[$domain] = '$1';
+                } elseif (array_key_exists('uid-prefix', $opts)){
                     $this->uidMapping[$domain] = "/".$opts['uid-prefix']."(.*)/";
-                elseif (array_key_exists('uid-suffix', $opts))
+                    $this->mailMapping[$domain] = $opts['uid-prefix'] . "$1";
+                }elseif (array_key_exists('uid-suffix', $opts)) {
                     $this->uidMapping[$domain] = "/(.*)".$opts['uid-suffix']."/";
+                    $this->mailMapping[$domain] = "$1" . $opts['uid-suffix'];
+                }
             }
         }
 	}
@@ -71,7 +81,6 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
 	public function checkPassword($uid, $password) {
         // get logins to check against the soap api
 	    $logins = $this->parseUID($uid);
-
 	    $authResult = false;
         $client = new SoapClient(null, array('location' => $this->soapLocation, 'uri' => $this->soapUri));
         try {
@@ -90,7 +99,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
         }
 
         if ($authResult) {
-            $this->storeUser($authResult['uid'], $authResult["email"], $authResult['displayname'], $this->getQuota($authResult['domain']), $this->getGroups($authResult['domain']));
+            $this->storeUser($authResult['uid'], $authResult["mailbox"], $authResult['domain'], $authResult['displayname'], $this->getQuota($authResult['domain']), $this->getGroups($authResult['domain']));
             return $authResult['uid'];
         } else {
             return false;
@@ -110,7 +119,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
             $displayname = $mailuser[0]['name'];
             $cryptedPassword = $mailuser[0]['password'];
             if(crypt($password, $cryptedPassword) === $cryptedPassword)
-                return array("uid" => $uid, "domain" => $domain, "email" => "$mailbox@$domain", "displayname" => $displayname);
+                return array("uid" => $uid, "mailbox" => $mailbox, "domain" => $domain, "displayname" => $displayname);
         }
         return false;
     }
@@ -119,9 +128,16 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
      * Get UID, mailbox name and maildomain name from users entered UID
      *
      * @param string $uid
-     * @return array uid, mailbox and domain as strings
+     * @return array array of multiple possible uid, mailbox and domain as strings
+     * @throws \OC\DatabaseException
      */
 	private function parseUID($uid) {
+	    // Get existing user from DB
+        $returningUser = $this->getUserData($uid);
+        if($returningUser) {
+            return array(array($returningUser['uid'], $returningUser['mailbox'], $returningUser['domain']));
+        }
+
         // Make uid lower case
         $uid = strtolower($uid);
         $result = array();
@@ -131,13 +147,14 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
         if (!(strpos($uid, '@') !== false) && (strpos($uid, '%40') !== false)) {
             $uid = str_replace("%40","@",$uid);
         }
-        list($mailbox, $domain) = preg_split('/@/', $uid);
+        list($mailbox, $domain) = array_pad(preg_split('/@/', $uid), 2, false);
 
 
         if($domain){
-            if(array_key_exists($domain, $this->uidMapping)){
+            // UID is an email address
+            if(array_key_exists($domain, $this->mailMapping)){
                 // re-map uid if options set for this domain
-                $uid = preg_replace("/\*/", $uid, $this->uidMapping[$domain]);
+                $uid = preg_filter("/(.*)/", $this->mailMapping[$domain], $mailbox, 1);
                 $result[] = array($uid, $mailbox, $domain);
             } else {
                 // just take "as is" if not
@@ -146,12 +163,11 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
         } else {
             // UID is no mail address
             // check for prefix, suffix or bare-name domains valid for this input
-            foreach($this->uidMapping AS $domain => $pattern) {
+            foreach($this->uidMapping AS $mappingDomain => $pattern) {
                if ($mappedMailbox = preg_filter($pattern, '$1', $uid))
-                    $result[] = array($uid, $mappedMailbox, $domain);
+                    $result[] = array($uid, $mappedMailbox, $mappingDomain);
             }
         }
-
         return $result;
     }
 
