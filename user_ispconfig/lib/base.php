@@ -202,10 +202,10 @@ abstract class Base extends \OC\User\Backend
         foreach ($groups AS $gid) {
           $this->addUserToGroup($uid, $gid);
         }
-        if ($preferences)
-          foreach($preferences AS $app => $options)
-            foreach($options AS $configkey => $value)
-              $this->setUserPreference($uid, $app, $configkey, $value);
+      if ($preferences)
+        foreach ($preferences AS $app => $options)
+          foreach ($options AS $configkey => $value)
+            $this->setUserPreference($uid, $app, $configkey, $value);
     }
   }
 
