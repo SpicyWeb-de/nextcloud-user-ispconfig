@@ -212,15 +212,17 @@ abstract class Base extends \OC\User\Backend{
 		return $result->fetchOne() > 0;
 	}
 
-    /**
-     * @param string $uid the username
-     * @param string $email users mail address
-     * @throws \OC\DatabaseException
-     */
-	private function setUserEmail($uid, $email) {
+  /**
+   * @param string $uid the username
+   * @param string $appid app to save the preference for
+   * @param string $configkey config key to set
+   * @param string $value value to save for the users preference
+   * @throws \OC\DatabaseException
+   */
+	private function setUserPreference($uid, $appid, $configkey, $value) {
         OC_DB::executeAudited('INSERT INTO `*PREFIX*preferences` (`userid`, `appid`, `configkey`, `configvalue`)'
             . ' VALUES (?, ?, ?, ?)',
-            array($uid, 'settings', 'email', $email)
+            array($uid, $appid, $configkey, $value)
         );
     }
 
@@ -259,7 +261,7 @@ abstract class Base extends \OC\User\Backend{
      * @throws \OC\DatabaseException
      */
     private function setInitialUserProfile($uid, $email, $displayname) {
-        $this->setUserEmail($uid, $email);
+        $this->setUserPreference($uid,'settings', 'email', $email);
         OC_DB::executeAudited(
             'INSERT INTO `*PREFIX*accounts` ( `uid`, `data` )'
             . ' VALUES( ?, ? )',
