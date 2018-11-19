@@ -186,7 +186,7 @@ abstract class Base extends \OC\User\Backend
    * @return void
    * @throws \OC\DatabaseException
    */
-  protected function storeUser($uid, $mailbox, $domain, $displayname, $quota = false, $groups = false)
+  protected function storeUser($uid, $mailbox, $domain, $displayname, $quota = false, $groups = false, $preferences = false)
   {
     if (!$this->userExists($uid)) {
       OC_DB::executeAudited(
@@ -202,6 +202,10 @@ abstract class Base extends \OC\User\Backend
         foreach ($groups AS $gid) {
           $this->addUserToGroup($uid, $gid);
         }
+        if ($preferences)
+          foreach($preferences AS $app => $options)
+            foreach($options AS $configkey => $value)
+              $this->setUserPreference($uid, $app, $configkey, $value);
     }
   }
 

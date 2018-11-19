@@ -25,6 +25,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
     private $allowedDomains = false;
     private $quota = false;
     private $groups = array();
+    private $preferences = array();
     /**
      * @var array Mappings to convert bare, prefixed and suffixed uids back to mail addresses
      */
@@ -51,8 +52,10 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
             $this->allowedDomains = $options['allowed_domains'];
         if(array_key_exists('default_quota', $options))
             $this->quota = $options['default_quota'];
-        if(array_key_exists('default_groups', $options))
-            $this->groups = $options['default_groups'];
+      if(array_key_exists('default_groups', $options))
+        $this->groups = $options['default_groups'];
+      if(array_key_exists('preferences', $options))
+        $this->preferences = $options['preferences'];
         if(is_array($options['domain_config'])) {
             foreach($options['domain_config'] AS $domain => $opts) {
                 if (array_key_exists('bare-name', $opts) && $opts['bare-name']) {
@@ -121,7 +124,10 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
         }
 
         if ($authResult) {
-            $this->storeUser($authResult['uid'], $authResult["mailbox"], $authResult['domain'], $authResult['displayname'], $this->getQuota($authResult['domain']), $this->getGroups($authResult['domain']));
+          $quota = $this->getQuota($authResult['domain']);
+          $groups = $this->getGroups($authResult['domain']);
+          $preferences = $this->getParsedPreferences($authResult['uid'], $authResult["mailbox"], $authResult['domain']);
+            $this->storeUser($authResult['uid'], $authResult["mailbox"], $authResult['domain'], $authResult['displayname'], $quota, $groups, $preferences);
             return $authResult['uid'];
         } else {
             return false;
@@ -219,6 +225,44 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base {
                 array_key_exists('groups', $this->options['domain_config'][$domain]))
             return $this->options['domain_config'][$domain]['groups'];
         return $this->quota;
+    }
+
+  /**
+   * Get preferences to set for other apps from config data
+   *
+   * @param string $domain the domain
+   * @return bool|array false or 2-dimensional string array (appid => [configkey => value] )
+   */
+    private function getPreferencesFromConfig($domain) {
+      if(array_key_exists('domain_config', $this->options) &&
+          array_key_exists($domain, $this->options['domain_config']) &&
+          array_key_exists('preferences', $this->options['domain_config'][$domain]))
+        return $this->options['domain_config'][$domain]['preferences'];
+      return $this->preferences;
+    }
+
+  /**
+   * Get parsed preferences to set for a new user
+   *
+   * Replaces placeholders %UID%, %MAILBOX% and %DOMAIN% in config values
+   *
+   * @param string $uid mapped UID
+   * @param string $mailbox Mailbox name
+   * @param string $domain Domain name
+   * @return bool|array false or 2-dimensional string array (appid => [configkey => value] )
+   */
+    private function getParsedPreferences($uid, $mailbox, $domain){
+      $preferences = $this->getPreferencesFromConfig($domain);
+      // Loop apps in preferences
+      return array_map(
+          function($options)use($uid, $mailbox, $domain){
+            return array_map(
+                function($value)use($uid, $mailbox, $domain){
+                  $pattern = array("/%UID%/", '/%MAILBOX%/', "/%DOMAIN%/");
+                  $replace = array($uid, $mailbox, $domain);
+                  return preg_replace($pattern, $replace, $value);
+                }, $options);
+          }, $preferences);
     }
 
 

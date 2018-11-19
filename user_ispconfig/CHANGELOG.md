@@ -2,6 +2,8 @@
 ### Added
 - Add Changelog File
 - appinfo: Multilingual description and php-soap dependency
+- Possibility to set default preferences in other apps on users first login, see Readme
+  [#3](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/3) @quest
 
 ## 0.2.1 – 2018-11-17
 ### Added

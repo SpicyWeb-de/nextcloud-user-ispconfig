@@ -74,6 +74,7 @@ configuration for your needs.
 | allowed_domains   | [string]  | false | Whitelist domains for login. Only accounts from this domains allowed, if set |
 | default_quota     | string    | false | Quota description (500 M, 2 G, ...) overriding system default for users authenticated by ISPConfig | 
 | default_groups    | [string]  | false | Auto-add new users to these groups on first login                         |
+| preferences       | [[string]]| false | Default settings to write for other apps on first login, see [Preferences for other apps](#preferences-for-other-apps)                   |
 
 Example:
 ```php
@@ -113,7 +114,7 @@ override per-domain using the `domain_config` option.
 | bare-name     | boolean   | false | Authenticate users of this domain by their mailbox name instead of the regular mail address |
 | uid-prefix    | string    | false | Identify users by prefixed mailbox name instead of regular mail address       |
 | uid-suffix    | string    | false | Identify users by suffixed mailbox name instead of regular mail address       |
-
+| preferences   | [[string]]| false | Default settings to set for other apps on first login, see [Preferences for other apps](#preferences-for-other-apps)                         |
 Example:
 
 ```php
@@ -187,6 +188,46 @@ Users from domain doe.com authenticate with their mailbox name suffixed by *.doe
 Instead of *john@doe.com* the user signes on with *john`.doe`*.
 
 __Resulting in federated cloud ID *john`.doe`@your-cloud.fqdn*__
+
+## Preferences for other apps
+
+The preferences key is used to set default preferences for other apps in your cloud.  
+It is a 2-dimensional array with the app name as 1st level key, the configkey as 2nd level key 
+and finally the value as string (see code example).
+
+Sometimes you need to set explicit preferences for your users for several apps.  
+The chat application JSXC for example works great preconfigured, as long as all users have an accounnt on the 
+same XMPP host with login name equivalent to their Jabber ID.  
+That doesn't work well with username mapping and users from different domains.
+
+Instead, you can look at the table `preferences` in the nextcloud database, extract the config option to set 
+for the app and define default preferences to set for every new user global or in domain scope.
+
+mysql> select * from oc_preferences where appid="ojsxc";
+
+| userid  | appid | configkey | configvalue                                                                                                                                                                                                                                                                                                           |
+|---------|-------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| john.doe | ojsxc | options   | {"mam":{"enable":"true"},"loginForm":{"enable":"true","jid":"#user","pass":"#password","onConnecting":"quiet","onConnected":"submit","onAuthFail":"submit","attachIfFound":"true","ifFound":"force","startMinimized":"true"},"xmpp":{"username":"john","domain":"doe.com","resource":"Cloud Chat"}} |
+
+To make it more generic (original contains mailbox and domain name), you can substitude with the following placeholders:
+
+| Placeholder | Value |  |
+| --- | --- | --- |
+| %UID% | Mapped user id | john.doe |
+| %MAILBOX% | Users Mailbox name | john |
+| %DOMAIN% | Users Domain name | doe.com |
+
+To auto-configure for example JXSC for your users, you could add the following preferences object either on global or domain scope: 
+```php
+'preferences' => array(
+    // 1st level key: appid of the app
+    'ojsxc' => array(
+        // 2nd level key: configkey to set for the app
+        // and the value to set as string
+        'options' => '{"mam":{"enable":"true"},"loginForm":{"enable":"true","jid":"#user","pass":"#password","onConnecting":"quiet","onConnected":"submit","onAuthFail":"submit","attachIfFound":"true","ifFound":"force","startMinimized":"true"},"xmpp":{"username":"%MAILBOX%","domain":"%DOMAIN%","resource":"Family Chat"}}'
+    )
+),
+```  
 
 ## Troubleshooting
 
