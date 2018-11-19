@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## 0.2.2 - 2018-11-20
 ### Added
 - Add Changelog File
 - appinfo: Multilingual description and php-soap dependency
