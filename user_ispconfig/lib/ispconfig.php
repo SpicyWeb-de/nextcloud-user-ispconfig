@@ -137,6 +137,60 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\Base
     }
   }
 
+  public function setPassword($uid, $password) {
+      return $this->mailuserUpdate($uid, array("password" => $password));
+  }
+
+  private function mailuserUpdate($uid, $newParams) {
+      list($uid, $mailbox, $domain) = $this->parseUID($uid)[0];
+      $client = new SoapClient(null, array('location' => $this->soapLocation, 'uri' => $this->soapUri));
+      try {
+          if ($session_id = $client->login($this->remoteUser, $this->remotePassword)) {
+
+              $mailuser = $client->mail_user_get($session_id, array('email' => "$mailbox@$domain"));
+              $params = $mailuser[0];
+              $ispconfig_version = $client->server_get_app_version($session_id);
+              if (version_compare($ispconfig_version['ispc_app_version'], '3.1dev', '<')) {
+                  $startdate = array('year'   => substr($params['autoresponder_start_date'], 0, 4),
+                      'month'  => substr($params['autoresponder_start_date'], 5, 2),
+                      'day'    => substr($params['autoresponder_start_date'], 8, 2),
+                      'hour'   => substr($params['autoresponder_start_date'], 11, 2),
+                      'minute' => substr($params['autoresponder_start_date'], 14, 2));
+                  $enddate = array('year'   => substr($params['autoresponder_end_date'], 0, 4),
+                      'month'  => substr($params['autoresponder_end_date'], 5, 2),
+                      'day'    => substr($params['autoresponder_end_date'], 8, 2),
+                      'hour'   => substr($params['autoresponder_end_date'], 11, 2),
+                      'minute' => substr($params['autoresponder_end_date'], 14, 2));
+                  $params['autoresponder_end_date'] = $enddate;
+                  $params['autoresponder_start_date'] = $startdate;
+              }
+              $params = array_merge($params, $newParams);
+              $remoteUid = $client->client_get_id($session_id, $mailuser[0]['sys_userid']);
+              $rowsUpdated = $client->mail_user_update($session_id, $remoteUid, $mailuser[0]['mailuser_id'], $params);
+              $client->logout($session_id);
+              return !!$rowsUpdated;
+          }
+      } catch (SoapFault $e) {
+          $errorMsg = $e->getMessage();
+          switch ($errorMsg) {
+              case 'looks like we got no XML document':
+                  OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid location or uri of ISPConfig SOAP Endpoint', OCP\Util::ERROR);
+                  break;
+              case 'The login failed. Username or password wrong.':
+                  OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid credentials of ISPConfig remote user', OCP\Util::ERROR);
+                  break;
+              case 'You do not have the permissions to access this function.':
+                  OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: ISPConfig remote user lacks one of the following permissions: Customer Functions, Server Functions, E-Mail User Functions', OCP\Util::ERROR);
+                  break;
+              default:
+                  OCP\Util::writeLog('user_ispconfig', 'SOAP Request failed: (' . $e->getCode() . ')' . $e->getMessage(), OCP\Util::ERROR);
+                  break;
+          }
+      }
+      return false;
+
+  }
+
   private function tryDomainLogin($uid, $mailbox, $domain, $password, $soapClient, $soapSession)
   {
     // Check, if domain is allowed
