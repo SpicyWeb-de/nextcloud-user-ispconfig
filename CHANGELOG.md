@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## 0.3.1
+
+### Fixed
+- Login with mapped UID for new users
+  [#4](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/4) @quest
+
 ## 0.3.0
 
 ### Added

@@ -186,6 +186,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
         $users[] = array($uid, $mappedMailbox, $mappingDomain);
       }
     }
+    return $users;
   }
 
   /**
