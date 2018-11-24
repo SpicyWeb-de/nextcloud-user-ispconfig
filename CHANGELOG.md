@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+## 0.3.0
+
+### Added
+- Password change for ISPConfig Mailusers
+  [#2](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/2) @quest  
+  Remote API user needs permission to *Customer Functions, Server Functions, E-Mail User Functions* to update mailuser passwords
+
+### Changes
+- Code refactoring, adds new intermediate abstract class for ISPConfig SOAP API handling
+
 ## 0.2.2 - 2018-11-20
 ### Added
 - Add Changelog File

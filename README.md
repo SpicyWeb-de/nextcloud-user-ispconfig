@@ -27,7 +27,7 @@ This authentication method uses ISPConfigs SOAP API. Thus it requires credential
 for a legitimate remote api user.
 
 In your ISPConfig 3 panel go to `System -> Remote Users` and create a new user 
-with permission for *E-Mail User Functions*.
+with permissions for *Customer Functions, Server Functions, E-Mail User Functions*.
 
 Along with that, you have to provide the SOAP API Location and Uri.  
 If you didn't modify it, these should be: 
