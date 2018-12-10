@@ -81,11 +81,28 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
    * @param $domain Domain name
    * @return bool|array false or Data Array containing all of the mailusers data fields as specified by ISPConfig mailuser api
    */
-  protected function getMailuser($mailbox, $domain)
+  protected function getMailuserByMailbox($mailbox, $domain)
   {
     try {
       if ($this->session) {
         $mailuser = $this->soap->mail_user_get($this->session, array('email' => "$mailbox@$domain"));
+        if (count($mailuser)) {
+          return $mailuser[0];
+        }
+      } else {
+        Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', Util::ERROR);
+      }
+    } catch (SoapFault $e) {
+      $this->handleSOAPFault($e);
+      return false;
+    }
+  }
+
+  protected function getMailuserByLoginname($uid)
+  {
+    try {
+      if ($this->session) {
+        $mailuser = $this->soap->mail_user_get($this->session, array('login' => $uid));
         if (count($mailuser)) {
           return $mailuser[0];
         }
@@ -106,35 +123,53 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
    * @param $newParams Array containing Data Fields to change, refer to ISPConfig API documentation for information on available fields
    * @return bool Update successful?
    */
-  protected function updateMailuser($mailbox, $domain, $newParams)
+  protected function updateMappedMailuser($mailbox, $domain, $newParams)
   {
     try {
       if ($this->session) {
-        Util::writeLog('user_ispconfig', "New Password for $mailbox | $domain", Util::ERROR);
-        $mailuser = $this->getMailuser($mailbox, $domain);
-        if (version_compare($this->getBackendVersion()['ispc_app_version'], '3.1dev', '<')) {
-          $startdate = array('year' => substr($mailuser['autoresponder_start_date'], 0, 4),
-              'month' => substr($mailuser['autoresponder_start_date'], 5, 2),
-              'day' => substr($mailuser['autoresponder_start_date'], 8, 2),
-              'hour' => substr($mailuser['autoresponder_start_date'], 11, 2),
-              'minute' => substr($mailuser['autoresponder_start_date'], 14, 2));
-          $enddate = array('year' => substr($mailuser['autoresponder_end_date'], 0, 4),
-              'month' => substr($mailuser['autoresponder_end_date'], 5, 2),
-              'day' => substr($mailuser['autoresponder_end_date'], 8, 2),
-              'hour' => substr($mailuser['autoresponder_end_date'], 11, 2),
-              'minute' => substr($mailuser['autoresponder_end_date'], 14, 2));
-          $mailuser['autoresponder_end_date'] = $enddate;
-          $mailuser['autoresponder_start_date'] = $startdate;
-        }
-        $params = array_merge($mailuser, $newParams);
-        $remoteUid = $this->getBackendClientID($mailuser['sys_userid']);
-        $rowsUpdated = $this->soap->mail_user_update($this->session, $remoteUid, $mailuser['mailuser_id'], $params);
-        return !!$rowsUpdated;
+        Util::writeLog('user_ispconfig', "New Password for $mailbox | $domain", Util::DEBUG);
+        $mailuser = $this->getMailuserByMailbox($mailbox, $domain);
+        return $this->updateMailuser($mailuser, $newParams);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
     }
     return false;
+  }
+
+  protected function updateIspcMailuser($uid, $newParams)
+  {
+    try {
+      if ($this->session) {
+        Util::writeLog('user_ispconfig', "New Password for $uid", Util::DEBUG);
+        $mailuser = $this->getMailuserByLoginname($uid);
+        return $this->updateMailuser($mailuser, $newParams);
+      }
+    } catch (SoapFault $e) {
+      $this->handleSOAPFault($e);
+    }
+    return false;
+  }
+
+  private function updateMailuser($mailuser, $newParams) {
+    if (version_compare($this->getBackendVersion()['ispc_app_version'], '3.1dev', '<')) {
+      $startdate = array('year' => substr($mailuser['autoresponder_start_date'], 0, 4),
+          'month' => substr($mailuser['autoresponder_start_date'], 5, 2),
+          'day' => substr($mailuser['autoresponder_start_date'], 8, 2),
+          'hour' => substr($mailuser['autoresponder_start_date'], 11, 2),
+          'minute' => substr($mailuser['autoresponder_start_date'], 14, 2));
+      $enddate = array('year' => substr($mailuser['autoresponder_end_date'], 0, 4),
+          'month' => substr($mailuser['autoresponder_end_date'], 5, 2),
+          'day' => substr($mailuser['autoresponder_end_date'], 8, 2),
+          'hour' => substr($mailuser['autoresponder_end_date'], 11, 2),
+          'minute' => substr($mailuser['autoresponder_end_date'], 14, 2));
+      $mailuser['autoresponder_end_date'] = $enddate;
+      $mailuser['autoresponder_start_date'] = $startdate;
+    }
+    $params = array_merge($mailuser, $newParams);
+    $remoteUid = $this->getBackendClientID($mailuser['sys_userid']);
+    $rowsUpdated = $this->soap->mail_user_update($this->session, $remoteUid, $mailuser['mailuser_id'], $params);
+    return !!$rowsUpdated;
   }
 
   /**

@@ -22,6 +22,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
   private $options = array();
 
   // extracted from options
+  private $useUIDMapping = true;
   private $allowedDomains = false;
   private $quota = false;
   private $groups = array();
@@ -47,6 +48,8 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
   {
     parent::__construct($location, $uri, $user, $password);
     $this->options = $options;
+    if (array_key_exists('map_uids', $options))
+      $this->useUIDMapping = !!$options['map_uids'];
     if (array_key_exists('allowed_domains', $options))
       $this->allowedDomains = $options['allowed_domains'];
     if (array_key_exists('default_quota', $options))
@@ -72,12 +75,14 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
   }
 
   /**
-   * Check if the password is correct without logging in the user
+   * Check if the password is correct on login
+   *
+   * Set some initial preference values on first login
    *
    * @param string $uid The username
    * @param string $password The password
    *
-   * @return true/false
+   * @return true/false/UID
    * @throws \OC\DatabaseException
    */
   public function checkPassword($uid, $password)
@@ -86,21 +91,46 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
       OCP\Util::writeLog('user_ispconfig', 'ERROR: PHP soap extension is not installed or not enabled', OCP\Util::ERROR);
       return false;
     }
-
-    // get logins to check against the soap api
-    $logins = $this->getPossibleLogins($uid);
     $authResult = false;
+    if($this->useUIDMapping)
+      $authResult = $this->loginWithUIDMapping($uid, $password);
+    else
+      $authResult = $this->loginWithUIDFromIspc($uid, $password);
+    return $this->processAuthResult($authResult);
+  }
 
+  /**
+   * Set new password for user UID
+   *
+   * @param $uid UID in nextcloud
+   * @param $password New Password
+   * @return bool Successful updated?
+   * @throws \OC\DatabaseException
+   */
+  public function setPassword($uid, $password)
+  {
+    $mailbox = '';
+    $domain = '';
+    extract($this->getUserData($uid));
     $this->connectSoap();
-    foreach ($logins AS $login) {
-      list($uid, $mailbox, $domain) = $login;
-      if ($domainUser = $this->tryDomainLogin($uid, $mailbox, $domain, $password)) {
-        $authResult = $domainUser;
-        break;
-      }
-    }
+    if($this->useUIDMapping)
+      $updateResult = $this->updateMappedMailuser($mailbox, $domain, array("password" => $password));
+    else
+      $updateResult = $this->updateIspcMailuser($uid, array("password" => $password));
     $this->disconnectSoap();
+    return $updateResult;
+  }
 
+  /**
+   * Extract UID from authenticated user or return false
+   *
+   * Also set some initial preferences on login
+   *
+   * @param $authResult Domain User Info
+   * @return bool|string false or UID
+   * @throws \OC\DatabaseException
+   */
+  private function processAuthResult($authResult) {
     if ($authResult) {
       $quota = $this->getQuota($authResult['domain']);
       $groups = $this->getGroups($authResult['domain']);
@@ -113,7 +143,54 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
   }
 
   /**
+   * Try to login the user $uid by using UID mapping
+   *
+   * @param $uid
+   * @param $password
+   * @return array|bool
+   * @throws \OC\DatabaseException
+   */
+  private function loginWithUIDMapping($uid, $password) {
+    // get logins to check against the soap api
+    $logins = $this->getPossibleLogins($uid);
+    $authResult = false;
+
+    $this->connectSoap();
+    foreach ($logins AS $login) {
+      list($uid, $mailbox, $domain) = $login;
+      if ($domainUser = $this->tryDomainLoginWithMappedUID($uid, $mailbox, $domain, $password)) {
+        $authResult = $domainUser;
+        break;
+      }
+    }
+    $this->disconnectSoap();
+
+    return $authResult;
+  }
+
+  /**
+   * Try to login the user directly using the mailbox login name from ISPConfig
+   *
+   * @param $uid
+   * @param $password
+   * @return array|bool
+   */
+  private function loginWithUIDFromIspc($uid, $password) {
+    // get logins to check against the soap api
+    $authResult = false;
+
+    $this->connectSoap();
+    if ($domainUser = $this->tryDomainLoginWithIspcUID($uid, $password)) {
+      $authResult = $domainUser;
+    }
+    $this->disconnectSoap();
+
+    return $authResult;
+  }
+
+  /**
    * Get possible UID, mailbox name and maildomain name combinations from users entered UID in Login Form
+   * according to configured UID Mapping
    *
    * @param string $uid
    * @return array array of multiple possible uid, mailbox and domain as strings
@@ -190,7 +267,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
   }
 
   /**
-   * Authenticate user against ISPConfig mailuser api
+   * Authenticate mapped user against ISPConfig mailuser api with mapped UID
    *
    * @param $uid
    * @param $mailbox
@@ -198,7 +275,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
    * @param $password
    * @return array|bool false or domain user array (uid, mailbox, domain, displayname)
    */
-  private function tryDomainLogin($uid, $mailbox, $domain, $password)
+  private function tryDomainLoginWithMappedUID($uid, $mailbox, $domain, $password)
   {
     // Check, if domain is allowed
     if ($this->allowedDomains) {
@@ -206,7 +283,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
         return false;
       }
     }
-    $mailuser = $this->getMailuser($mailbox, $domain);
+    $mailuser = $this->getMailuserByMailbox($mailbox, $domain);
     if (count($mailuser)) {
       $displayname = $mailuser['name'];
       $cryptedPassword = $mailuser['password'];
@@ -214,6 +291,34 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
         return array("uid" => $uid, "mailbox" => $mailbox, "domain" => $domain, "displayname" => $displayname);
     }
     return false;
+  }
+
+  /**
+   * Authenticate mapped user against ISPConfig mailuser api with login name from ISPConfig
+   *
+   * @param $uid
+   * @param $password
+   * @return array|bool
+   */
+  private function tryDomainLoginWithIspcUID($uid, $password) {
+    $mailuser = $this->getMailuserByLoginname($uid);
+
+    if (count($mailuser)) {
+      // Check, if domain is allowed
+      if ($this->allowedDomains) {
+        if (count($this->allowedDomains) && $mailuser['domain'] && !in_array($mailuser['domain'], $this->allowedDomains)) {
+          return false;
+        }
+      }
+      $email = $mailuser['email'];
+      list($mailbox, $domain) = array_pad(preg_split('/@/', $email), 2, false);
+      $displayname = $mailuser['name'];
+      $cryptedPassword = $mailuser['password'];
+      if (crypt($password, $cryptedPassword) === $cryptedPassword)
+        return array("uid" => $uid, "mailbox" => $mailbox, "domain" => $domain, "displayname" => $displayname);
+    }
+    return false;
+
   }
 
   /**
@@ -286,21 +391,5 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
     return $this->preferences;
   }
 
-  /**
-   * @param $uid UID in nextcloud
-   * @param $password New Password
-   * @return bool Successful updated?
-   * @throws \OC\DatabaseException
-   */
-  public function setPassword($uid, $password)
-  {
-    $mailbox = '';
-    $domain = '';
-    extract($this->getUserData($uid));
-    $this->connectSoap();
-    $updateResult = $this->updateMailuser($mailbox, $domain, array("password" => $password));
-    $this->disconnectSoap();
-    return $updateResult;
-  }
 
 }
