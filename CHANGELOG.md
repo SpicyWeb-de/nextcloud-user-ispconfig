@@ -1,8 +1,15 @@
 ## [Unreleased]
 
+## 0.4.0
+
+### Added
 - Disable UID mapping for Login with original username from ISPConfig by setting `map_uids=false` in authenticator config  
-  Enabled by default for legacy installations   
+  Enabled by default for legacy installations, don't change in production!  
   [#5](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/5) @quest
+
+### Changes
+- Code refactoring, added ISPDomainUser class to handle nextcloud user related data and pass it between methods of the authenticator
+  @quest
 
 ## 0.3.1
 
