@@ -20,7 +20,7 @@ use SoapFault;
  * @license  http://www.gnu.org/licenses/agpl AGPL
  * @link     https://spicyhub.de/spicy-web/nextcloud-user-ispconfig
  */
-abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
+abstract class ISPConfig_SOAP extends Base
 {
   /**
    * @var SoapClient Soap Connection to ISPConfig remote api
@@ -30,18 +30,29 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
    * @var string|boolean false or Session ID of established Soap Connection
    */
   private $session;
-
+  /**
+   * @var string ISPC Remote API location from authenticatior config options
+   */
   private $location;
+  /**
+   * @var string ISPC Remote API URI from authenticatior config options
+   */
   private $uri;
+  /**
+   * @var string ISPC Remote user from authenticatior config options
+   */
   private $remoteUser;
+  /**
+   * @var string ISPC Remote password from authenticatior config options
+   */
   private $remotePassword;
 
   /**
    * ISPConfig_SOAP constructor.
-   * @param $location ISPConfig API location
-   * @param $uri ISPConfig API uri
-   * @param $user ISPConfig remote user
-   * @param $password ISPConfig remote user password
+   * @param string $location ISPConfig API location
+   * @param string $uri ISPConfig API uri
+   * @param string $user ISPConfig remote user
+   * @param string $password ISPConfig remote user password
    */
   public function __construct($location, $uri, $user, $password)
   {
@@ -75,10 +86,10 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
   }
 
   /**
-   * Get data array of an ISPConfig managed mailuser
+   * Get data array of an ISPConfig managed mailuser authenticated by mailbox and domain
    *
-   * @param $mailbox Mailbox name
-   * @param $domain Domain name
+   * @param string $mailbox Mailbox name
+   * @param string $domain Domain name
    * @return bool|array false or Data Array containing all of the mailusers data fields as specified by ISPConfig mailuser api
    */
   protected function getMailuserByMailbox($mailbox, $domain)
@@ -90,14 +101,22 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
           return $mailuser[0];
         }
       } else {
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', Util::ERROR);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
       return false;
     }
+    return false;
   }
 
+  /**
+   * Get data array of an ISPConfig managed mailuser authenticated by ISPConfig Mail Login Name
+   *
+   * @param string $uid Loginname from ISPConfig
+   * @return bool|array false or Data Array containing all of the mailusers data fields as specified by ISPConfig mailuser api
+   */
   protected function getMailuserByLoginname($uid)
   {
     try {
@@ -107,20 +126,22 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
           return $mailuser[0];
         }
       } else {
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', Util::ERROR);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
       return false;
     }
+    return false;
   }
 
   /**
-   * Update data fields of an ISPConfig managed mailuser in ISPConfig
+   * Update data fields of an ISPConfig managed mailuser identified by mailbox and domain in ISPConfig
    *
-   * @param $mailbox Mailbox name
-   * @param $domain Domain name
-   * @param $newParams Array containing Data Fields to change, refer to ISPConfig API documentation for information on available fields
+   * @param string $mailbox Mailbox name
+   * @param string $domain Domain name
+   * @param array $newParams Array containing Data Fields to change, refer to ISPConfig API documentation for information on available fields
    * @return bool Update successful?
    */
   protected function updateMappedMailuser($mailbox, $domain, $newParams)
@@ -137,10 +158,18 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
     return false;
   }
 
+  /**
+   * Update data fields of an ISPConfig managed mailuser identified by ISPConfig Mail Login in ISPConfig
+   *
+   * @param string $uid Loginname from ISPConfig
+   * @param array $newParams Array containing Data Fields to change, refer to ISPConfig API documentation for information on available fields
+   * @return bool Update successful?
+   */
   protected function updateIspcMailuser($uid, $newParams)
   {
     try {
       if ($this->session) {
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', "New Password for $uid", Util::DEBUG);
         $mailuser = $this->getMailuserByLoginname($uid);
         return $this->updateMailuser($mailuser, $newParams);
@@ -151,6 +180,13 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
     return false;
   }
 
+  /**
+   * Update a mailuser object with new parameters and send it to ISPConfig Mailuser API
+   *
+   * @param array $mailuser
+   * @param array $newParams
+   * @return bool Update successful?
+   */
   private function updateMailuser($mailuser, $newParams) {
     if (version_compare($this->getBackendVersion()['ispc_app_version'], '3.1dev', '<')) {
       $startdate = array('year' => substr($mailuser['autoresponder_start_date'], 0, 4),
@@ -183,12 +219,14 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
       if ($this->session) {
         return $this->soap->server_get_app_version($this->session);
       } else {
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', Util::ERROR);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
       return false;
     }
+    return false;
   }
 
   /**
@@ -202,15 +240,16 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
     try {
       if ($this->session) {
         $clientid = $this->soap->client_get_id($this->session, $userId);
-        Util::writeLog('user_ispconfig', "Remote Client ID: $clientid", Util::ERROR);
         return $clientid;
       } else {
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', Util::ERROR);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
       return false;
     }
+    return false;
   }
 
   /**
@@ -223,15 +262,19 @@ abstract class ISPConfig_SOAP extends \OCA\user_ispconfig\Base
     $errorMsg = $error->getMessage();
     switch ($errorMsg) {
       case 'looks like we got no XML document':
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid location or uri of ISPConfig SOAP Endpoint', Util::ERROR);
         break;
       case 'The login failed. Username or password wrong.':
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid credentials of ISPConfig remote user', Util::ERROR);
         break;
       case 'You do not have the permissions to access this function.':
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP Request failed: Ensure ISPConfig remote user has the following permissions: Customer Functions, Server Functions, E-Mail User Functions', Util::ERROR);
         break;
       default:
+        /** @noinspection PhpDeprecationInspection */
         Util::writeLog('user_ispconfig', 'SOAP Request failed: [' . $error->getCode() . '] ' . $error->getMessage(), Util::ERROR);
         break;
     }

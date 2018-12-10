@@ -57,7 +57,7 @@ abstract class Base extends \OC\User\Backend
    * Get display name of the user
    *
    * @param string $uid user ID of the user
-   * @return string display name
+   * @return string display name or fallback to UID
    * @throws \OC\DatabaseException
    */
   public function getDisplayName($uid)
@@ -79,7 +79,7 @@ abstract class Base extends \OC\User\Backend
    * Get data of returning user by uid or mailaddress
    *
    * @param string $loginName Login Name to check
-   * @return array uid, mailbox, domain
+   * @return ISPDomainUser|bool Found domainuser from database or false
    * @throws \OC\DatabaseException
    */
   public function getUserData($loginName)
@@ -89,7 +89,7 @@ abstract class Base extends \OC\User\Backend
         . ' WHERE `uid` = ? OR CONCAT(`mailbox`, "@", `domain`) = ?',
         array($loginName, $loginName)
     )->fetchRow();
-    return $user;
+    return $user ? new ISPDomainUser($user['uid'], $user['mailbox'], $user['domain']) : false;
   }
 
   /**
@@ -122,7 +122,7 @@ abstract class Base extends \OC\User\Backend
   /**
    * Get a list of all users
    *
-   * @return array with all uids
+   * @return string[] with all uids
    * @throws \OC\DatabaseException
    */
   public function getUsers($search = '', $limit = null, $offset = null)
@@ -159,7 +159,7 @@ abstract class Base extends \OC\User\Backend
    * @param string $uid The username
    * @param string $displayName The new display name
    *
-   * @return true/false
+   * @return bool Update successful?
    * @throws \OC\DatabaseException
    */
   public function setDisplayName($uid, $displayName)
@@ -181,7 +181,7 @@ abstract class Base extends \OC\User\Backend
    * @param string $uid The username
    * @param string $displayname Users displayname
    * @param string|bool $quota Amount of quota for new created user or false
-   * @param array|bool $groups string-array of groups for new created user or false
+   * @param string[]|bool $groups string-array of groups for new created user or false
    *
    * @return void
    * @throws \OC\DatabaseException
