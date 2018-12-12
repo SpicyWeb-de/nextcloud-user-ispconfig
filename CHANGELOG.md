@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## 0.4.1
+
+### Fixed
+- Existing User Lookup crashes authentication on SQLite Installations
+  @quest
+
 ## 0.4.0
 
 ### Added

@@ -84,11 +84,21 @@ abstract class Base extends \OC\User\Backend
    */
   public function getUserData($loginName)
   {
-    $user = OC_DB::executeAudited(
-        'SELECT `uid`, `mailbox`, `domain` FROM `*PREFIX*users_ispconfig`'
-        . ' WHERE `uid` = ? OR CONCAT(`mailbox`, "@", `domain`) = ?',
-        array($loginName, $loginName)
-    )->fetchRow();
+    list($mailbox, $domain) = array_pad(preg_split('/@/', $loginName), 2, false);
+    $stmnt = 'SELECT `uid`, `mailbox`, `domain` FROM `*PREFIX*users_ispconfig`'
+        . ' WHERE `uid` = ?';
+    if ($mailbox && $domain) {
+      $stmnt .= ' OR (`mailbox` = ? AND `domain` = ?) = ?';
+      $user = OC_DB::executeAudited($stmnt,
+          array($loginName, $mailbox, $domain)
+      )->fetchRow();
+    } else {
+      $user = OC_DB::executeAudited($stmnt,
+          array($loginName)
+      )->fetchRow();
+    }
+
+
     return $user ? new ISPDomainUser($user['uid'], $user['mailbox'], $user['domain']) : false;
   }
 
