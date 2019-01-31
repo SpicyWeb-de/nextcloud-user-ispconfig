@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+## 0.4.2
+
+### Changes
+- tested and marked for compartibility with NC15
+  [#6](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/6) @quest
+
+### Fixes
+- Adds not existing groups before adding first user to it, see
+  [#6](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/6) @quest
+
 ## 0.4.1
 
 ### Fixed
