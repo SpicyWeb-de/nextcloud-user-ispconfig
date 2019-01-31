@@ -274,6 +274,18 @@ abstract class Base extends \OC\User\Backend
    */
   protected function addUserToGroup($uid, $gid)
   {
+    // Add group if not exists
+    $result = OC_DB::executeAudited(
+        'SELECT COUNT(*) FROM `*PREFIX*groups`'
+        . ' WHERE gid = ?',
+        array($gid)
+    );
+    if($result->fetchOne() == 0){
+      OC_DB::executeAudited(
+          'INSERT INTO `*PREFIX*groups` (`gid`) VALUES (?)',
+          array($gid)
+      );
+    }
     OC_DB::executeAudited(
         'INSERT INTO `*PREFIX*group_user` (`gid`, `uid`) VALUES (?, ?)',
         array($gid, $uid)
