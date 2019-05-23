@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## 0.4.3
+
+### Changes
+- [#7](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/7) Tested for NC16, raises max NC version @quest
+
 ## 0.4.2
 
 ### Changes
