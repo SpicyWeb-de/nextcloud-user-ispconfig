@@ -75,7 +75,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
       $this->groups = $options['default_groups'];
     if (array_key_exists('preferences', $options))
       $this->preferences = $options['preferences'];
-    if (is_array($options['domain_config'])) {
+    if (isset($options['domain_config']) && is_array($options['domain_config'])) {
       foreach ($options['domain_config'] AS $domain => $opts) {
         if (array_key_exists('bare-name', $opts) && $opts['bare-name']) {
           $this->uidMapping[$domain] = '/(.*)/';
