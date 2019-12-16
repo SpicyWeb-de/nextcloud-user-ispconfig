@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+## 0.4.4
+
+### Changes
+- tested and marked for compartibility with NC17 @quest
+
+### Fixes
+- Fixes error getting userdata of returning user authenticated by email  
+  @quest
+- Fixes check for not-always-existing domain config array key  
+  [#10](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/10) @Ma
+
+
 ## 0.4.3
 
 ### Changes
