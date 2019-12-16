@@ -88,7 +88,7 @@ abstract class Base extends \OC\User\Backend
     $stmnt = 'SELECT `uid`, `mailbox`, `domain` FROM `*PREFIX*users_ispconfig`'
         . ' WHERE `uid` = ?';
     if ($mailbox && $domain) {
-      $stmnt .= ' OR (`mailbox` = ? AND `domain` = ?) = ?';
+      $stmnt .= ' OR (`mailbox` = ? AND `domain` = ?)';
       $user = OC_DB::executeAudited($stmnt,
           array($loginName, $mailbox, $domain)
       )->fetchRow();
