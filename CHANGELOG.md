@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## 0.4.5
+
+### Changes
+- tested and marked for compartibility with NC18 @quest
+
 ## 0.4.4
 
 ### Changes
