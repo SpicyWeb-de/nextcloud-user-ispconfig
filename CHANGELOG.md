@@ -1,11 +1,16 @@
 ## [Unreleased]
 
+## 0.4.6
+
+## Changes
+- Requirement set to minimum NC18
+
 ### Fixes
 - Fixes broken group creation for NC18 -> no longer compartible with NC < 18!  
   [#15](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/15) @quest
 - Attempt to fix error in account mapping function
   [#16](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/16) @quest
-  
+
 ## 0.4.5
 
 ### Changes
