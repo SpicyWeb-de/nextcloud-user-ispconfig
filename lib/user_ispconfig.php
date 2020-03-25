@@ -299,7 +299,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
       }
     }
     $mailuser = $this->getMailuserByMailbox($user->getMailbox(), $user->getDomain());
-    if (count($mailuser)) {
+    if (is_array($mailuser) && count($mailuser)) {
       $result = ISPDomainUser::fromMailuserIfPasswordMatch($user->getUid(), $password, $mailuser);
       /** @noinspection PhpDeprecationInspection */
       OCP\Util::writeLog('user_ispconfig', "Login result for $user: $result", OCP\Util::DEBUG);

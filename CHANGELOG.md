@@ -2,8 +2,10 @@
 
 ### Fixes
 - Fixes broken group creation for NC18 -> no longer compartible with NC < 18!  
-  [#15](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/10) @quest
-
+  [#15](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/15) @quest
+- Attempt to fix error in account mapping function
+  [#16](https://spicyhub.de/spicy-web/nextcloud-user-ispconfig/issues/16) @quest
+  
 ## 0.4.5
 
 ### Changes
