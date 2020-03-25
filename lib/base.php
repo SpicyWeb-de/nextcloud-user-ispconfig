@@ -282,8 +282,8 @@ abstract class Base extends \OC\User\Backend
     );
     if($result->fetchOne() == 0){
       OC_DB::executeAudited(
-          'INSERT INTO `*PREFIX*groups` (`gid`) VALUES (?)',
-          array($gid)
+          'INSERT INTO `*PREFIX*groups` (`gid`, `displayname`) VALUES (?, ?)',
+          array($gid, $gid)
       );
     }
     OC_DB::executeAudited(
