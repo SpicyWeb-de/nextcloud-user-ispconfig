@@ -1,8 +1,13 @@
 ## [Unreleased]
 
+## 0.4.7
+
+### Changes
+- Requirement set to minimum NC19
+
 ## 0.4.6
 
-## Changes
+### Changes
 - Requirement set to minimum NC18
 
 ### Fixes
