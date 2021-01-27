@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+## 0.4.8
+- Requirement set to minimum NC20
+
 ## 0.4.7
 
 ### Changes
