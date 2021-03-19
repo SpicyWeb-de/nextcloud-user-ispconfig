@@ -363,7 +363,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
         array_key_exists($user->getDomain(), $this->options['domain_config']) &&
         array_key_exists('groups', $this->options['domain_config'][$user->getDomain()]))
       return $this->options['domain_config'][$user->getDomain()]['groups'];
-    return $this->quota;
+    return $this->groups;
   }
 
   /**
