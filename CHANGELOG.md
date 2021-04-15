@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## 0.4.9
+- Requirement set to NC 18-21
+- Legacy workaround for default groups not being applied  
+  [PR#5](https://github.com/SpicyWeb-de/nextcloud-user-ispconfig/pull/5) @detoxhby
+- Update project URLs to GitHub
+
 ## 0.4.8
 - Requirement set to minimum NC20
 
