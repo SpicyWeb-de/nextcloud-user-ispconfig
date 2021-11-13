@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## 0.4.10
+- Requirement set to NC 22
+- Update repository URL in README clone command and lib comments
+- Migrate database.xml to database migration api  
+  [PR#8](https://github.com/SpicyWeb-de/nextcloud-user-ispconfig/pull/8) @conrad784
+
 ## 0.4.9
 - Requirement set to NC 18-21
 - Legacy workaround for default groups not being applied  

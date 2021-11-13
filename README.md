@@ -14,7 +14,7 @@ Clone this repository into your nextcloud apps directory:
 
 ```bash
 cd apps/
-git clone https://spicyhub.de/spicy-web/nextcloud-user-ispconfig.git user_ispconfig
+git clone https://github.com/SpicyWeb-de/nextcloud-user-ispconfig.git user_ispconfig
 ```
 
 Install it as usual from CLI or admins app list.

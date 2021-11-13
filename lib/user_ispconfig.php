@@ -14,7 +14,7 @@ use \OCA\user_ispconfig\ISPDomainUser;
  * @package  UserISPConfig
  * @author   Michael Fürmann <michael@spicyweb.de>
  * @license  http://www.gnu.org/licenses/agpl AGPL
- * @link     https://spicyhub.de/spicy-web/nextcloud-user-ispconfig
+ * @link     https://github.com/SpicyWeb-de/nextcloud-user-ispconfig
  */
 class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
 {

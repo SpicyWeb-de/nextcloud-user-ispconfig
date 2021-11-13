@@ -20,7 +20,7 @@ use \OC_DB;
  * @author   Christian Weiske <cweiske@cweiske.de>
  * @author   Michael Fürmann <michael@spicyweb.de>
  * @license  http://www.gnu.org/licenses/agpl AGPL
- * @link     https://spicyhub.de/spicy-web/nextcloud-user-ispconfig
+ * @link     https://github.com/SpicyWeb-de/nextcloud-user-ispconfig
  */
 abstract class Base extends \OC\User\Backend
 {
