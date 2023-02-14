@@ -319,7 +319,7 @@ class OC_User_ISPCONFIG extends ISPConfig_SOAP
   private function tryDomainLoginWithIspcUID($uid, $password) {
     $mailuser = $this->getMailuserByLoginname($uid);
 
-    if (count($mailuser)) {
+    if (is_array($mailuser) && count($mailuser)) {
       $domainuser = ISPDomainUser::fromMailuserIfPasswordMatch($uid, $password, $mailuser);
       if(!$domainuser)
         return false;
