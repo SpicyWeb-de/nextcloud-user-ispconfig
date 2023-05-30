@@ -2,6 +2,13 @@
 
 Authenticate nextcloud users against ISPConfig Mailuser API
 
+__NOT ACTIVELY MAINTAINED__
+
+Unfortunatly my personal situation has changed and no longer leaves me time to actively maintain this project.  
+If you want to help, you can always send pull requests. I will still review them and publish as updates to the store.
+
+Or, if you are willing to overtake the project as maintainer, please contact me.
+
 ## Installation
 
 ### Normal installation (recommended)
