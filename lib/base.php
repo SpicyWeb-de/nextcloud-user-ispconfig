@@ -25,7 +25,14 @@ use \OC_DB;
 abstract class Base extends \OC\User\Backend
 {
 
-  /**
+	/**
+	 * Shortcut to get an instance of DB query builder
+	 */
+	private function query() {
+		return \OC::$server->getDatabaseConnection()->getQueryBuilder();
+	}
+
+	/**
    * Delete a user
    *
    * @param string $uid The username of the user to delete
@@ -34,22 +41,12 @@ abstract class Base extends \OC\User\Backend
    */
   public function deleteUser($uid)
   {
-    OC_DB::executeAudited(
-        'DELETE FROM `*PREFIX*accounts` WHERE `uid` = ?',
-        array($uid)
-    );
-    OC_DB::executeAudited(
-        'DELETE FROM `*PREFIX*preferences` WHERE `userid` = ?',
-        array($uid)
-    );
-    OC_DB::executeAudited(
-        'DELETE FROM `*PREFIX*group_user` WHERE `uid` = ?',
-        array($uid)
-    );
-    OC_DB::executeAudited(
-        'DELETE FROM `*PREFIX*users_ispconfig` WHERE `uid` = ?',
-        array($uid)
-    );
+	  $query = $this->query();
+    $query->delete('accounts')->where($query->expr()->eq('uid', $query->createNamedParameter($uid)));
+    $query->delete('preferences')->where($query->expr()->eq('userid', $query->createNamedParameter($uid)));
+    $query->delete('group_user')->where($query->expr()->eq('uid', $query->createNamedParameter($uid)));
+    $query->delete('users_ispconfig')->where($query->expr()->eq('uid', $query->createNamedParameter($uid)));
+    $query->execute();
     return true;
   }
 
@@ -62,12 +59,13 @@ abstract class Base extends \OC\User\Backend
    */
   public function getDisplayName($uid)
   {
-    $user = OC_DB::executeAudited(
-        'SELECT `displayname` FROM `*PREFIX*users_ispconfig`'
-        . ' WHERE `uid` = ?',
-        array($uid)
-    )->fetchRow();
-    $displayName = trim($user['displayname'], ' ');
+	  $query = $this->query();
+    $query->select('displayname')->from('users_ispconfig')->where($query->expr()->eq('uid', $query->createNamedParameter($uid)));
+	  $result = $query->execute();
+	  $row = $result->fetch();
+	  $result->closeCursor();
+
+    $displayName = trim($row['displayname'], ' ');
     if (!empty($displayName)) {
       return $displayName;
     } else {
@@ -84,22 +82,19 @@ abstract class Base extends \OC\User\Backend
    */
   public function getUserData($loginName)
   {
+    $query = $this->query();
     list($mailbox, $domain) = array_pad(preg_split('/@/', $loginName), 2, false);
-    $stmnt = 'SELECT `uid`, `mailbox`, `domain` FROM `*PREFIX*users_ispconfig`'
-        . ' WHERE `uid` = ?';
+    $query->select('uid', 'mailbox', 'domain')->from('users_ispconfig')->where($query->expr()->eq('uid', $query->createNamedParameter($loginName)));
     if ($mailbox && $domain) {
-      $stmnt .= ' OR (`mailbox` = ? AND `domain` = ?)';
-      $user = OC_DB::executeAudited($stmnt,
-          array($loginName, $mailbox, $domain)
-      )->fetchRow();
-    } else {
-      $user = OC_DB::executeAudited($stmnt,
-          array($loginName)
-      )->fetchRow();
+		// TODO append or query matching mailbox AND domain
+      $query->orWhere($query->expr()->eq('mailbox', $query->createNamedParameter($mailbox)))
+      //$stmnt .= ' OR (`mailbox` = ? AND `domain` = ?)';
     }
+	$result = $query->execute();
+	$row = $result->fetch();
+	$result->closeCursor();
 
-
-    return $user ? new ISPDomainUser($user['uid'], $user['mailbox'], $user['domain']) : false;
+    return $row ? new ISPDomainUser($row['uid'], $row['mailbox'], $row['domain']) : false;
   }
 
   /**
@@ -110,6 +105,9 @@ abstract class Base extends \OC\User\Backend
    */
   public function getDisplayNames($search = '', $limit = null, $offset = null)
   {
+    $query = $this->query();
+	  // TODO how to : like lower %value%
+	  // $query->select('uid', 'displayname')->from('users_ispconfig')->where($query->expr()->eq('uid', $query->createNamedParameter($loginName)));
     $result = OC_DB::executeAudited(
         array(
             'sql' => 'SELECT `uid`, `displayname` FROM `*PREFIX*users_ispconfig`'
@@ -137,6 +135,8 @@ abstract class Base extends \OC\User\Backend
    */
   public function getUsers($search = '', $limit = null, $offset = null)
   {
+	  // todo how to : like lower value%
+	  // $query->select('uid')->from('users_ispconfig')->where($query->expr()->eq('uid', $query->createNamedParameter($search)));
     $result = OC_DB::executeAudited(
         array(
             'sql' => 'SELECT `uid` FROM `*PREFIX*users_ispconfig`'
@@ -177,6 +177,7 @@ abstract class Base extends \OC\User\Backend
     if (!$this->userExists($uid)) {
       return false;
     }
+    // todo how to : = lower value
     OC_DB::executeAudited(
         'UPDATE `*PREFIX*users_ispconfig` SET `displayname` = ?'
         . ' WHERE LOWER(`uid`) = ?',
