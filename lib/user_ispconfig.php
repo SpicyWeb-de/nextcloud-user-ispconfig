@@ -106,7 +106,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
   {
     if (!class_exists("SoapClient")) {
       /** @noinspection PhpDeprecationInspection */
-      OCP\Util::writeLog('user_ispconfig', 'ERROR: PHP soap extension is not installed or not enabled', OCP\Util::ERROR);
+      OCP\Util::writeLog('user_ispconfig', 'ERROR: PHP soap extension is not installed or not enabled', OCP\ILogger::ERROR);
       return false;
     }
     if($this->useUIDMapping)
@@ -302,7 +302,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
     if (is_array($mailuser) && count($mailuser)) {
       $result = ISPDomainUser::fromMailuserIfPasswordMatch($user->getUid(), $password, $mailuser);
       /** @noinspection PhpDeprecationInspection */
-      OCP\Util::writeLog('user_ispconfig', "Login result for $user: $result", OCP\Util::DEBUG);
+      OCP\Util::writeLog('user_ispconfig', "Login result for $user: $result", OCP\ILogger::DEBUG);
       return $result;
     }
     return false;
@@ -329,7 +329,7 @@ class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
         }
       }
       /** @noinspection PhpDeprecationInspection */
-      OCP\Util::writeLog('user_ispconfig', "Login result for $uid: $domainuser", OCP\Util::DEBUG);
+      OCP\Util::writeLog('user_ispconfig', "Login result for $uid: $domainuser", OCP\ILogger::DEBUG);
       return $domainuser;
     }
     return false;
