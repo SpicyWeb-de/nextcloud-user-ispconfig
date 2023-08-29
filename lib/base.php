@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2018 Michael Fürmann <michael@spicyweb.de>
+ * Copyright (c) 2018 Michael FÃ¼rmann <michael@spicyweb.de>
  * This file is licensed under the Affero General Public License version 3 or
  * later.
  */
@@ -18,7 +18,7 @@ use \OC_DB;
  * @category Apps
  * @package  UserISPConfig
  * @author   Christian Weiske <cweiske@cweiske.de>
- * @author   Michael Fürmann <michael@spicyweb.de>
+ * @author   Michael FÃ¼rmann <michael@spicyweb.de>
  * @license  http://www.gnu.org/licenses/agpl AGPL
  * @link     https://github.com/SpicyWeb-de/nextcloud-user-ispconfig
  */
@@ -87,7 +87,7 @@ abstract class Base extends \OC\User\Backend
     $query->select('uid', 'mailbox', 'domain')->from('users_ispconfig')->where($query->expr()->eq('uid', $query->createNamedParameter($loginName)));
     if ($mailbox && $domain) {
 		// TODO append or query matching mailbox AND domain
-      $query->orWhere($query->expr()->eq('mailbox', $query->createNamedParameter($mailbox)))
+      $query->orWhere($query->expr()->eq('mailbox', $query->createNamedParameter($mailbox)));
       //$stmnt .= ' OR (`mailbox` = ? AND `domain` = ?)';
     }
 	$result = $query->execute();
@@ -200,11 +200,11 @@ abstract class Base extends \OC\User\Backend
   protected function storeUser($uid, $mailbox, $domain, $displayname, $quota = false, $groups = false, $preferences = false)
   {
     if (!$this->userExists($uid)) {
-      OC_DB::executeAudited(
-          'INSERT INTO `*PREFIX*users_ispconfig` ( `uid`, `displayname`, `mailbox`, `domain` )'
-          . ' VALUES( ?, ?, ?, ? )',
-          array($uid, $displayname, $mailbox, $domain)
-      );
+      //OC_DB::executeAudited(
+      //    'INSERT INTO `*PREFIX*users_ispconfig` ( `uid`, `displayname`, `mailbox`, `domain` )'
+      //   . ' VALUES( ?, ?, ?, ? )',
+      //    array($uid, $displayname, $mailbox, $domain)
+      //);
 
       $this->setInitialUserProfile($uid, "$mailbox@$domain", $displayname);
       if ($quota)
@@ -230,12 +230,13 @@ abstract class Base extends \OC\User\Backend
    */
   public function userExists($uid)
   {
-    $result = OC_DB::executeAudited(
-        'SELECT COUNT(*) FROM `*PREFIX*users_ispconfig`'
-        . ' WHERE LOWER(`uid`) = LOWER(?)',
-        array($uid)
-    );
-    return $result->fetchOne() > 0;
+    $query = $this->query();
+    $query->select('displayname')->from('users_ispconfig')->where('uid = ?')->setParameter(0,$uid);
+    $result = $query->execute();
+    $row = $result->fetch();
+    //$result->closeCursor();
+    //return $result->fetchOne() > 0;
+    return $row;
   }
 
   /**
@@ -247,10 +248,15 @@ abstract class Base extends \OC\User\Backend
    */
   private function setUserPreference($uid, $appid, $configkey, $value)
   {
-    OC_DB::executeAudited('INSERT INTO `*PREFIX*preferences` (`userid`, `appid`, `configkey`, `configvalue`)'
-        . ' VALUES (?, ?, ?, ?)',
-        array($uid, $appid, $configkey, $value)
-    );
+    $query = $this->query();
+    $query->insert('preferences')->values(['userid' =>'?','appid' => '?', 'configkey' => '?', 'configvalue' => '?'])
+			     ->setParameter(0,$uid)
+			     ->setParameter(1,$appid)
+			     ->setParameter(2,$configkey)
+			     ->setParameter(3,$value);
+    $result = $query->execute();
+    return $result;
+
   }
 
   /**
@@ -260,10 +266,16 @@ abstract class Base extends \OC\User\Backend
    */
   private function setUserQuota($uid, $quota)
   {
-    OC_DB::executeAudited('INSERT INTO `*PREFIX*preferences` (`userid`, `appid`, `configkey`, `configvalue`)'
-        . ' VALUES (?, ?, ?, ?)',
-        array($uid, 'files', 'quota', $quota)
-    );
+ 
+    $query = $this->query();
+    $query->insert('preferences')->values(['userid' =>'?','appid' => '?', 'configkey' => '?', 'configvalue' => '?'])
+                             ->setParameter(0,$uid)
+                             ->setParameter(1,"files")
+                             ->setParameter(2,"quota")
+                             ->setParameter(3,$quota);
+  $result = $query->execute();
+    return $result;
+
   }
 
   /**
@@ -276,21 +288,32 @@ abstract class Base extends \OC\User\Backend
   protected function addUserToGroup($uid, $gid)
   {
     // Add group if not exists
-    $result = OC_DB::executeAudited(
-        'SELECT COUNT(*) FROM `*PREFIX*groups`'
-        . ' WHERE gid = ?',
-        array($gid)
-    );
+//    $result = OC_DB::executeAudited(
+//        'SELECT COUNT(*) FROM `*PREFIX*groups`'
+//        . ' WHERE gid = ?',
+//        array($gid)
+//    );
+
+    $query = $this->query();
+    $query->select('gid')->from('groups')->where('gid = ?')->setParameter(0,$gid);
+    $result = $query->execute();
+
     if($result->fetchOne() == 0){
-      OC_DB::executeAudited(
-          'INSERT INTO `*PREFIX*groups` (`gid`, `displayname`) VALUES (?, ?)',
-          array($gid, $gid)
-      );
+      $query = $this->query();
+      $query->insert('groups')->values(['gid' =>'?','displayname' => '?'])
+                             ->setParameter(0,$gid)
+                             ->setParameter(1,$gid);
+      $result = $query->execute();
+      return $result;
+
     }
-    OC_DB::executeAudited(
-        'INSERT INTO `*PREFIX*group_user` (`gid`, `uid`) VALUES (?, ?)',
-        array($gid, $uid)
-    );
+
+    $query = $this->query();
+    $query->insert('group_user')->values(['gid' =>'?','uid' => '?'])
+                             ->setParameter(0,$gid)
+                             ->setParameter(1,$uid);
+    $result = $query->execute();
+    return $result;
   }
 
   /**
