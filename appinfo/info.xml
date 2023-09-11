@@ -30,7 +30,7 @@ Benötigt SOAP PHP Extension installiert und aktiviert und einen ISPConfig Remot
 ]]></description>
 	<licence>agpl</licence>
 	<author mail="michael@spicyweb.de" homepage="https://spicyweb.de">Michael Fürmann</author>
-	<namespace>UserISPConfig</namespace>
+	<namespace>User_ISPConfig</namespace>
 	<category>integration</category>
 	<category>security</category>
 	<documentation>

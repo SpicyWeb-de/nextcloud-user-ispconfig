@@ -5,7 +5,8 @@
  * later.
  */
 
-use \OCA\user_ispconfig\ISPDomainUser;
+use \OCA\User_ISPConfig\ISPConfig_SOAP;
+use \OCA\User_ISPConfig\ISPDomainUser;
 
 /**
  * User authentication against an ISPConfig 3 API server
@@ -16,7 +17,7 @@ use \OCA\user_ispconfig\ISPDomainUser;
  * @license  http://www.gnu.org/licenses/agpl AGPL
  * @link     https://github.com/SpicyWeb-de/nextcloud-user-ispconfig
  */
-class OC_User_ISPCONFIG extends \OCA\user_ispconfig\ISPConfig_SOAP
+class OC_User_ISPCONFIG extends ISPConfig_SOAP
 {
   /**
    * @var array Config options from authenticator config

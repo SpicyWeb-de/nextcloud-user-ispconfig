@@ -1,10 +1,11 @@
 <?php
-namespace OCA\user_ispconfig;
 /**
  * Copyright (c) 2018 Michael Fürmann <michael@spicyweb.de>
  * This file is licensed under the Affero General Public License version 3 or
  * later.
  */
+
+namespace OCA\User_ISPConfig;
 
 /**
  * User authentication against an ISPConfig 3 API server

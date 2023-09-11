@@ -5,7 +5,7 @@
  * later.
  */
 
-namespace OCA\user_ispconfig;
+namespace OCA\User_ISPConfig;
 
 use OCP\Util;
 use OCP\ILogger;
