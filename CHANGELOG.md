@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+## 0.5.0
+- Requirement set to NC 27
+- Add Application Constructor for NC >= 27  
+  [PR#17](https://github.com/SpicyWeb-de/nextcloud-user-ispconfig/pull/17) @volkarts-dev
+- Migrate base class to newer DB connection getter and query class  
+  [PR#17](https://github.com/SpicyWeb-de/nextcloud-user-ispconfig/pull/17) @volkarts-dev  
+  [PR15](https://github.com/SpicyWeb-de/nextcloud-user-ispconfig/pull/15) @gkooistra
+
 ## 0.4.10
 - Requirement set to NC 22
 - Update repository URL in README clone command and lib comments
