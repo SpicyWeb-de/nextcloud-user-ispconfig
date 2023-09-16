@@ -30,7 +30,7 @@ Benötigt SOAP PHP Extension installiert und aktiviert und einen ISPConfig Remot
 ]]></description>
 	<licence>agpl</licence>
 	<author mail="michael@spicyweb.de" homepage="https://spicyweb.de">Michael Fürmann</author>
-	<namespace>UserISPConfig</namespace>
+	<namespace>User_ISPConfig</namespace>
 	<category>integration</category>
 	<category>security</category>
 	<documentation>
@@ -40,7 +40,7 @@ Benötigt SOAP PHP Extension installiert und aktiviert und einen ISPConfig Remot
 	<website>https://github.com/SpicyWeb-de/nextcloud-user-ispconfig</website>
 	<repository type="git">https://github.com/SpicyWeb-de/nextcloud-user-ispconfig.git</repository>
 	<dependencies>
-		<nextcloud min-version="22" max-version="22" />
+		<nextcloud min-version="22" max-version="27" />
 		<lib>soap</lib>
 	</dependencies>
 	<types>

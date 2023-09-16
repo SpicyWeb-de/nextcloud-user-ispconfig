@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\UserISPConfig\Migration;
+namespace OCA\User_ISPConfig\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
