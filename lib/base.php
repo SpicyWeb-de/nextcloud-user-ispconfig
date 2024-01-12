@@ -25,6 +25,16 @@ abstract class Base extends \OC\User\Backend
 {
 
 	/**
+	 * Shortcut to get an instance of ILogger
+	 * @return \OCP\ILogger
+	 */
+	protected function logger()
+	{
+		return \OC::$server->getLogger();
+		// (min NC25) return \OCP\Server::get(LoggerInterface::class);
+	}
+
+	/**
 	 * Shortcut to get an instance of DB connection
 	 * @return \OCP\IDBConnection
 	 */
