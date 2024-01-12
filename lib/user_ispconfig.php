@@ -107,7 +107,7 @@ class OC_User_ISPCONFIG extends ISPConfig_SOAP
   {
     if (!class_exists("SoapClient")) {
       /** @noinspection PhpDeprecationInspection */
-      OCP\Util::writeLog('user_ispconfig', 'ERROR: PHP soap extension is not installed or not enabled', OCP\ILogger::ERROR);
+      $this->logger()->error('ERROR: PHP soap extension is not installed or not enabled', ['app' => 'user_ispconfig']);
       return false;
     }
     if($this->useUIDMapping)
@@ -217,8 +217,6 @@ class OC_User_ISPCONFIG extends ISPConfig_SOAP
     // Get existing user from DB
     $returningUser = $this->getUserData($uid);
     if ($returningUser) {
-      /** @noinspection PhpDeprecationInspection */
-      // OCP\Util::writeLog('user_ispconfig', "Found returning user: $returningUser", OCP\Util::DEBUG);
       return array($returningUser);
     }
 
@@ -303,7 +301,7 @@ class OC_User_ISPCONFIG extends ISPConfig_SOAP
     if (is_array($mailuser) && count($mailuser)) {
       $result = ISPDomainUser::fromMailuserIfPasswordMatch($user->getUid(), $password, $mailuser);
       /** @noinspection PhpDeprecationInspection */
-      OCP\Util::writeLog('user_ispconfig', "Login result for $user: $result", OCP\ILogger::DEBUG);
+      $this->logger()->debug("Login result for $user: $result", ['app' => 'user_ispconfig']);
       return $result;
     }
     return false;
@@ -330,7 +328,7 @@ class OC_User_ISPCONFIG extends ISPConfig_SOAP
         }
       }
       /** @noinspection PhpDeprecationInspection */
-      OCP\Util::writeLog('user_ispconfig', "Login result for $uid: $domainuser", OCP\ILogger::DEBUG);
+      $this->logger()->debug("Login result for $uid: $domainuser", ['app' => 'user_ispconfig']);
       return $domainuser;
     }
     return false;
