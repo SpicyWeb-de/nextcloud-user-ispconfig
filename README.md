@@ -5,9 +5,16 @@ Authenticate nextcloud users against ISPConfig Mailuser API
 __NOT ACTIVELY MAINTAINED__
 
 Unfortunatly my personal situation has changed and no longer leaves me time to actively maintain this project.  
-If you want to help, you can always send pull requests. I will still review them and publish as updates to the store.
 
-Or, if you are willing to overtake the project as maintainer, please contact me.
+I just found a new ISPConfig integration for nextcloud on the app store. If you are looking for ISPConfig based user authentication, please use this:
+https://github.com/mediabox-cl/nextcloud-user-ispconfig-api
+
+__ATTENTION__ users of nextcloud-user-ispconfig:
+You cannot just replace this app by the new one.
+The new integration depends on a plugin in ISPConfig you have to install and has a database structure different from this plugin.
+So you need to migrate your users account data in the database.
+There is already a discussion on that topic:
+https://github.com/mediabox-cl/nextcloud-user-ispconfig-api/issues/1
 
 ## Installation
 
