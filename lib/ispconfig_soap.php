@@ -7,8 +7,6 @@
 
 namespace OCA\User_ISPConfig;
 
-use OCP\Util;
-use OCP\ILogger;
 use SoapClient;
 use SoapFault;
 
@@ -70,7 +68,6 @@ abstract class ISPConfig_SOAP extends Base
    */
   protected function connectSoap()
   {
-    //Util::writeLog('user_ispconfig', "$this->location $this->uri", Util::ERROR);
     $this->soap = new SoapClient(null,
         array('location' => $this->location,
               'uri' => $this->uri,
@@ -113,7 +110,7 @@ abstract class ISPConfig_SOAP extends Base
         }
       } else {
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', ILogger::ERROR);
+        $this->logger()->error('SOAP error: SOAP session not established', ['app' => 'user_ispconfig']);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
@@ -138,7 +135,7 @@ abstract class ISPConfig_SOAP extends Base
         }
       } else {
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', ILogger::ERROR);
+        $this->logger()->error('SOAP error: SOAP session not established', ['app' => 'user_ispconfig']);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
@@ -159,7 +156,7 @@ abstract class ISPConfig_SOAP extends Base
   {
     try {
       if ($this->session) {
-        Util::writeLog('user_ispconfig', "New Password for $mailbox | $domain", ILogger::DEBUG);
+        $this->logger()->debug("New Password for $mailbox | $domain", ['app' => 'user_ispconfig']);
         $mailuser = $this->getMailuserByMailbox($mailbox, $domain);
         return $this->updateMailuser($mailuser, $newParams);
       }
@@ -181,7 +178,7 @@ abstract class ISPConfig_SOAP extends Base
     try {
       if ($this->session) {
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', "New Password for $uid", ILogger::DEBUG);
+        $this->logger()->debug("New Password for $uid", ['app' => 'user_ispconfig']);
         $mailuser = $this->getMailuserByLoginname($uid);
         return $this->updateMailuser($mailuser, $newParams);
       }
@@ -231,7 +228,7 @@ abstract class ISPConfig_SOAP extends Base
         return $this->soap->server_get_app_version($this->session);
       } else {
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', ILogger::ERROR);
+        $this->logger()->error('SOAP error: SOAP session not established', ['app' => 'user_ispconfig']);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
@@ -254,7 +251,7 @@ abstract class ISPConfig_SOAP extends Base
         return $clientid;
       } else {
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP error: SOAP session not established', ILogger::ERROR);
+        $this->logger()->error('SOAP error: SOAP session not established', ['app' => 'user_ispconfig']);
       }
     } catch (SoapFault $e) {
       $this->handleSOAPFault($e);
@@ -274,19 +271,19 @@ abstract class ISPConfig_SOAP extends Base
     switch ($errorMsg) {
       case 'looks like we got no XML document':
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid location or uri of ISPConfig SOAP Endpoint', ILogger::ERROR);
+        $this->logger()->error('user_ispconfig', 'SOAP Request failed: Invalid location or uri of ISPConfig SOAP Endpoint', ['app' => 'user_ispconfig']);
         break;
       case 'The login failed. Username or password wrong.':
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP Request failed: Invalid credentials of ISPConfig remote user', ILogger::ERROR);
+        $this->logger()->error('user_ispconfig', 'SOAP Request failed: Invalid credentials of ISPConfig remote user', ['app' => 'user_ispconfig']);
         break;
       case 'You do not have the permissions to access this function.':
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP Request failed: Ensure ISPConfig remote user has the following permissions: Customer Functions, Server Functions, E-Mail User Functions', ILogger::ERROR);
+        $this->logger()->error('user_ispconfig', 'SOAP Request failed: Ensure ISPConfig remote user has the following permissions: Customer Functions, Server Functions, E-Mail User Functions', ['app' => 'user_ispconfig']);
         break;
       default:
         /** @noinspection PhpDeprecationInspection */
-        Util::writeLog('user_ispconfig', 'SOAP Request failed: [' . $error->getCode() . '] ' . $error->getMessage(), ILogger::ERROR);
+        $this->logger()->error('user_ispconfig', 'SOAP Request failed: [' . $error->getCode() . '] ' . $error->getMessage(), ['app' => 'user_ispconfig']);
         break;
     }
   }
